@@ -1,3 +1,8 @@
+
+% spara till git: !git commit -m "kommentar"
+% upp på nät: !git push
+
+
 theta = [.1065; 0.0902; -1.607; .6065]; % real parameters
 
 n = 2; % number of delayed y signals
