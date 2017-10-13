@@ -1,6 +1,7 @@
 
-% spara till git: !git commit -m "kommentar"
-% upp på nät: !git push
+% lägg till alla filer: !git add -A
+% spara till git:       !git commit -m "kommentar"
+% upp på nät:           !git push
 
 
 theta = [.1065; 0.0902; -1.607; .6065]; % real parameters
