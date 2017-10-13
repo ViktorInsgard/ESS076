@@ -21,10 +21,7 @@ P = zeros(n+m, n+m, N);
 P_0 = 0.01*eye(n+m);
 theta_0 = zeros(n+m,1);
 y = zeros(1,N);
-u = zeros(1,N);
-r = ones(1,N);
-
-% controller parameters
+u = mvnrnd(0,2,N);
 T = zeros(n_t,N);
 S = zeros(n_s,N);
 R = zeros(n_r,N);
@@ -64,7 +61,7 @@ for k=2:N
     R(1,k) = 1;
     R(2,k) = theta_hat(n+2,k); 
     
-    u(k) = T(1,k)*r(k) - S(1,k)*y(k) - S(2,k)*y(k-1) - R(2,k)*u(k-1);
+    u(k) = T(1,k)*r(k) - S(1,k)*y(k) - S
 end
 
 close all;
