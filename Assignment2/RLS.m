@@ -23,8 +23,7 @@ P = zeros(n+m, n+m, N);
 P_0 = 0.01*eye(n+m);
 theta_0 = [0; 0; 1 ; 1];
 y = zeros(1,N);
-%u = zeros(1,N);
-u = ones(1,N);
+u = zeros(1,N);
 r = ones(1,N);
 
 % controller parameters
@@ -58,8 +57,8 @@ for k=2:N
      y(k) = theta'*phi(:,k);
      
     P(:,:,k) = (1/lambda)*(P(:,:,k-1) - ...
-        (P(:,:,k-1)*phi(:,k-1)*phi(:,k-1)'*P(:,:,k-1)) / ...
-        (lambda + phi(:,k-1)'*P(:,:,k-1)*phi(:,k-1)));
+        (P(:,:,k-1)*phi(:,k)*phi(:,k)'*P(:,:,k-1)) / ...
+        (lambda + phi(:,k)'*P(:,:,k-1)*phi(:,k)));
     K = P(:,:,k)*phi(:,k);
     epsilon = y(k) - phi(:,k)'*theta_hat(:,k-1);
     theta_hat(:,k) = theta_hat(:,k-1) + K*epsilon;
@@ -83,3 +82,9 @@ for i=1:n+m
 end
 legend(Legend);
 hold off; grid on;
+
+figure(2); hold on;
+plot(1:N, y, 'b-', 1:N, r, 'b:');
+plot(1:N, u, 'r-');
+legend('y', 'r', 'u');
+grid on; hold off;

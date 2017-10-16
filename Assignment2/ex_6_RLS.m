@@ -65,8 +65,8 @@ for k=2:N
      y(k) = theta'*phi(:,k);
      
     P(:,:,k) = (1/lambda)*(P(:,:,k-1) - ...
-        (P(:,:,k-1)*phi(:,k-1)*phi(:,k-1)'*P(:,:,k-1)) / ...
-        (lambda + phi(:,k-1)'*P(:,:,k-1)*phi(:,k-1)));
+        (P(:,:,k-1)*phi(:,k)*phi(:,k)'*P(:,:,k-1)) / ...
+        (lambda + phi(:,k)'*P(:,:,k-1)*phi(:,k)));
     K = P(:,:,k)*phi(:,k);
     epsilon = y(k) - phi(:,k)'*theta_hat(:,k-1);
     theta_hat(:,k) = theta_hat(:,k-1) + K*epsilon;
