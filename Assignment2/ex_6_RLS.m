@@ -20,17 +20,18 @@ lambda = 0.9;
 theta_hat = zeros(n+m, N);
 phi = zeros(n+m, N);
 P = zeros(n+m, n+m, N);
-P_0 = 1*eye(n+m);
-theta_0 = [0; 0; 1 ; 1];
+P_0 = 100*eye(n+m);
+theta_0 = [0; 0; .5; 1];
 y = zeros(1,N);
-%u = zeros(1,N);
-u = ones(1,N);
+u = zeros(1,N);
 r = ones(1,N);
 
 % controller parameters
 T = zeros(n_t,N);
 S = zeros(n_s,N);
 R = zeros(n_r,N);
+Am = [-1.3205; 0.4966];
+Bm = 0.1761;
 
 % RLS equations
 P(:,:,1) = (1/lambda)*(P_0 - (P_0*(phi(:,1)*phi(:,1)')*P_0) / ...
@@ -39,16 +40,18 @@ K = P(:,:,1)*phi(:,1);
 epsilon = y(1) - phi(:,1)'*theta_0;
 theta_hat(:,1) = theta_0 + K*epsilon;
 
-T(:,1) = (1 - 1.3205 + 0.4966) / (theta_0(n+1) + theta_0(n+2));
-
-V = ([1 theta_0(n+1) 0; ...
-    theta_0(1) theta_0(n+2) theta_0(n+1); ...
-    theta_0(2) 0 theta_0(n+2)]) \ ...
-    [(-1.3025 - theta_0(1)); (0.4966 - theta_0(2)); 0];
+T(:,1) = (1 + Am(1) + Am(2)) / (theta_0(n+1) + theta_0(n+2));
+A = [1 theta_0(n+1) 0;
+     theta_0(1) theta_0(n+2) theta_0(n+1);
+     theta_0(2) 0 theta_0(n+2)];
+b = [(Am(1) - theta_0(1)); (Am(2) - theta_0(2)); 0];
+V = A \ b;
 
 R(2,1) = V(1);
 S(1,1) = V(2); 
 S(2,1) = V(3);
+
+u(1) = T(1,1)*r(1); % Other values are 0;
 
 for k=2:N
      
@@ -68,16 +71,16 @@ for k=2:N
     epsilon = y(k) - phi(:,k)'*theta_hat(:,k-1);
     theta_hat(:,k) = theta_hat(:,k-1) + K*epsilon;
     
-    T(:,1) = (1 - 1.3205 + 0.4966) / (theta_hat(n+1,k) + theta_hat(n+2,k));
+    T(:,1) = (1 + Am(1) + Am(2)) / (theta_hat(n+1) + theta_hat(n+2));
+    A = [1 theta_hat(n+1) 0;
+         theta_hat(1) theta_hat(n+2) theta_hat(n+1);
+         theta_hat(2) 0 theta_hat(n+2)];
+    b = [(Am(1) - theta_hat(1)); (Am(2) - theta_hat(2)); 0];
+    V = A \ b;
 
-    V = ([1 theta_hat(n+1,k) 0; ...
-    theta_hat(1,k) theta_hat(n+2,k) theta_hat(n+1,k); ...
-    theta_hat(2,k) 0 theta_hat(n+2,k)]) \ ...
-    [(-1.3025 - theta_hat(1,k)); (0.4966 - theta_hat(2,k)); 0];
-
-    R(2,k) = V(1);
-    S(1,k) = V(2); 
-    S(2,k) = V(3);
+    R(2,1) = V(1);
+    S(1,1) = V(2); 
+    S(2,1) = V(3);
     
     u(k) = T(1,k)*r(k) - S(1,k)*y(k) - S(2,k)*y(k-1) - R(2,k)*u(k-1);
     
