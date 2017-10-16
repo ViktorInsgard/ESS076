@@ -13,7 +13,7 @@ n_t = 1;
 n_s = 2;
 n_r = 2; 
 
-N = 250; % simulation length
+N = 1000; % simulation length
 
 lambda = 0.9;
 
@@ -21,7 +21,7 @@ theta_hat = zeros(n+m, N);
 phi = zeros(n+m, N);
 P = zeros(n+m, n+m, N);
 P_0 = 100*eye(n+m);
-theta_0 = [0; 0; .5; 1];
+theta_0 = [-1; 0; 1; 1];
 y = zeros(1,N);
 u = zeros(1,N);
 r = pulseSignal(50, 50, N);%ones(1,N);
@@ -63,16 +63,16 @@ for k=2:N
     [theta_hat(:,k), P(:,:,k)] = ...
         RLSstep(theta_hat(:,k-1), P(:,:,k-1), y(k), phi(:,k), lambda);
     
-    T(:,1) = (1 + Am(1) + Am(2)) / (theta_hat(n+1) + theta_hat(n+2));
+    T(:,k) = (1 + Am(1) + Am(2)) / (theta_hat(n+1) + theta_hat(n+2));
     A = [1 theta_hat(n+1) 0;
          theta_hat(1) theta_hat(n+2) theta_hat(n+1);
          theta_hat(2) 0 theta_hat(n+2)];
     b = [(Am(1) - theta_hat(1)); (Am(2) - theta_hat(2)); 0];
     V = A \ b;
 
-    R(2,1) = V(1);
-    S(1,1) = V(2); 
-    S(2,1) = V(3);
+    R(2,k) = V(1);
+    S(1,k) = V(2); 
+    S(2,k) = V(3);
     
     u(k) = T(1,k)*r(k) - S(1,k)*y(k) - S(2,k)*y(k-1) - R(2,k)*u(k-1);
     

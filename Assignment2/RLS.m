@@ -4,16 +4,23 @@ clear
 % spara till git:       !git commit -m "kommentar"
 % upp på nät:           !git push
 
-theta = [-1.607; .6065; 0.1065; 0.0902]; % real parameters
-
 n = 2; % number of delayed y signals
 m = 2; % number of delayed u signals
-assert(length(theta) == n+m);
 n_t = 1;
 n_s = 2;
 n_r = 2; 
 
-N = 150; % simulation length
+N = 500; % simulation length
+
+% real parameters
+theta = zeros(4,N);
+for i=1:N
+    if i<250
+        theta(:,i) = [-1.607; .6065; 0.1065; 0.0902];
+    else
+        theta(:,i) = 2*[-1.607; .6065; 0.1065; 0.0902];
+    end
+end
 
 lambda = 0.8;
 
@@ -24,7 +31,7 @@ P_0 = 0.01*eye(n+m);
 theta_0 = [0; 0; 1 ; 1];
 y = zeros(1,N);
 u = zeros(1,N);
-r = ones(1,N);
+r = pulseSignal(50, 50, N);%ones(1,N);
 
 % controller parameters
 T = zeros(n_t,N);
@@ -51,7 +58,7 @@ for k=2:N
     phi(4,k) = phi(3,k-1);
     phi(3,k) = u(k-1);
      
-     y(k) = theta'*phi(:,k);
+     y(k) = theta(:,k)'*phi(:,k);
      
     [theta_hat(:,k), P(:,:,k)] = ...
         RLSstep(theta_hat(:,k-1), P(:,:,k-1), y(k), phi(:,k), lambda);
