@@ -32,12 +32,9 @@ S = zeros(n_s,N);
 R = zeros(n_r,N);
 
 % RLS equations
-P(:,:,1) = (1/lambda)*(P_0 - (P_0*(phi(:,1)*phi(:,1)')*P_0) / ...
-    (lambda + phi(:,1)'*P_0*phi(:,1)));
-K = P(:,:,1)*phi(:,1);
-epsilon = y(1) - phi(:,1)'*theta_0;
-theta_hat(:,1) = theta_0 + K*epsilon;
-
+[theta_hat(:,1), P(:,:,1)] = ...
+        RLSstep(theta_0, P_0, 0, phi(:,1), lambda);
+    
 T(:,1) = 0.1761 / theta_0(n+1);
 S(1,1) = (-1.3205 - theta_0(1)) / theta_0(n+1);
 S(2,1) = (0.4966 - theta_0(2)) / theta_0(n+1);
@@ -48,20 +45,16 @@ R(2,1) = theta_0(n+2) / theta_0(n+1);
 for k=2:N
      
     % Adjust y values in phi
-    phi(2:n,k) = phi(1:n-1,k-1);
+    phi(2,k) = phi(1,k-1);
     phi(1,k) = -y(k-1);
     % Adjust u values in phi
-    phi(n+2:n+m,k) = phi(n+1:n+m-1,k-1);
-    phi(n+1,k) = u(k-1);
+    phi(4,k) = phi(3,k-1);
+    phi(3,k) = u(k-1);
      
      y(k) = theta'*phi(:,k);
      
-    P(:,:,k) = (1/lambda)*(P(:,:,k-1) - ...
-        (P(:,:,k-1)*phi(:,k)*phi(:,k)'*P(:,:,k-1)) / ...
-        (lambda + phi(:,k)'*P(:,:,k-1)*phi(:,k)));
-    K = P(:,:,k)*phi(:,k);
-    epsilon = y(k) - phi(:,k)'*theta_hat(:,k-1);
-    theta_hat(:,k) = theta_hat(:,k-1) + K*epsilon;
+    [theta_hat(:,k), P(:,:,k)] = ...
+        RLSstep(theta_hat(:,k-1), P(:,:,k-1), y(k), phi(:,k), lambda);
     
     T(:,k) = 0.1761 / theta_hat(n+1,k);
     S(1,k) = (-1.3205 - theta_hat(1,k)) / theta_hat(n+1,k);

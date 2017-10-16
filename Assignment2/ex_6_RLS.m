@@ -13,7 +13,7 @@ n_t = 1;
 n_s = 2;
 n_r = 2; 
 
-N = 90; % simulation length
+N = 250; % simulation length
 
 lambda = 0.9;
 
@@ -24,7 +24,7 @@ P_0 = 100*eye(n+m);
 theta_0 = [0; 0; .5; 1];
 y = zeros(1,N);
 u = zeros(1,N);
-r = ones(1,N);
+r = pulseSignal(50, 50, N);%ones(1,N);
 
 % controller parameters
 T = zeros(n_t,N);
@@ -33,12 +33,8 @@ R = zeros(n_r,N);
 Am = [-1.3205; 0.4966];
 Bm = 0.1761;
 
-% RLS equations
-P(:,:,1) = (1/lambda)*(P_0 - (P_0*(phi(:,1)*phi(:,1)')*P_0) / ...
-    (lambda + phi(:,1)'*P_0*phi(:,1)));
-K = P(:,:,1)*phi(:,1);
-epsilon = y(1) - phi(:,1)'*theta_0;
-theta_hat(:,1) = theta_0 + K*epsilon;
+% RLS step
+[theta_hat(:,1), P(:,:,1)] = RLSstep(theta_0, P_0, 0, phi(:,1), lambda);
 
 T(:,1) = (1 + Am(1) + Am(2)) / (theta_0(n+1) + theta_0(n+2));
 A = [1 theta_0(n+1) 0;
@@ -56,20 +52,16 @@ u(1) = T(1,1)*r(1); % Other values are 0;
 for k=2:N
      
     % Adjust y values in phi
-    phi(2:n,k) = phi(1:n-1,k-1);
+    phi(2,k) = phi(1,k-1);
     phi(1,k) = -y(k-1);
     % Adjust u values in phi
-    phi(n+2:n+m,k) = phi(n+1:n+m-1,k-1);
-    phi(n+1,k) = u(k-1);
+    phi(4,k) = phi(3,k-1);
+    phi(3,k) = u(k-1);
      
-     y(k) = theta'*phi(:,k);
-     
-    P(:,:,k) = (1/lambda)*(P(:,:,k-1) - ...
-        (P(:,:,k-1)*phi(:,k)*phi(:,k)'*P(:,:,k-1)) / ...
-        (lambda + phi(:,k)'*P(:,:,k-1)*phi(:,k)));
-    K = P(:,:,k)*phi(:,k);
-    epsilon = y(k) - phi(:,k)'*theta_hat(:,k-1);
-    theta_hat(:,k) = theta_hat(:,k-1) + K*epsilon;
+    y(k) = theta'*phi(:,k);
+    
+    [theta_hat(:,k), P(:,:,k)] = ...
+        RLSstep(theta_hat(:,k-1), P(:,:,k-1), y(k), phi(:,k), lambda);
     
     T(:,1) = (1 + Am(1) + Am(2)) / (theta_hat(n+1) + theta_hat(n+2));
     A = [1 theta_hat(n+1) 0;

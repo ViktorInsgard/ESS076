@@ -1,0 +1,4 @@
+function y = pulseSignal(n_high, n_low, N)
+    
+for k=1:N    end
+end
