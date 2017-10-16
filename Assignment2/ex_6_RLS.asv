@@ -4,27 +4,34 @@ clear
 % spara till git:       !git commit -m "kommentar"
 % upp på nät:           !git push
 
-theta = [-1.607; .6065; 0.1065; 0.0902]; % real parameters
-
 n = 2; % number of delayed y signals
 m = 2; % number of delayed u signals
-assert(length(theta) == n+m);
 n_t = 1;
 n_s = 2;
 n_r = 2; 
 
-N = 100; % simulation length
+N = 200; % simulation length
+
+% real parameters
+theta = zeros(4,N);
+for i=1:N
+    if i<250
+        theta(:,i) = [-1.607; .6065; 0.1065; 0.0902];
+    else
+        theta(:,i) = 2*[-1.607; .6065; 0.1065; 0.0902];
+    end
+end
 
 lambda = 0.9;
 
 theta_hat = zeros(n+m, N);
 phi = zeros(n+m, N);
 P = zeros(n+m, n+m, N);
-P_0 = 100*eye(n+m);
-theta_0 = [-1; 0; 1; 1];
+P_0 = .01*eye(n+m);
+theta_0 = [-1; .5; 1; 1];
 y = zeros(1,N);
 u = zeros(1,N);
-r = pulseSignal(50, 50,%ones(1,N);
+r = pulseSignal(50, 50, N);
 
 % controller parameters
 T = zeros(n_t,N);
@@ -58,16 +65,16 @@ for k=2:N
     phi(4,k) = phi(3,k-1);
     phi(3,k) = u(k-1);
      
-    y(k) = theta'*phi(:,k);
+    y(k) = theta(:,k)'*phi(:,k);
     
     [theta_hat(:,k), P(:,:,k)] = ...
         RLSstep(theta_hat(:,k-1), P(:,:,k-1), y(k), phi(:,k), lambda);
     
-    T(:,k) = (1 + Am(1) + Am(2)) / (theta_hat(n+1) + theta_hat(n+2));
-    A = [1 theta_hat(n+1) 0;
-         theta_hat(1) theta_hat(n+2) theta_hat(n+1);
-         theta_hat(2) 0 theta_hat(n+2)];
-    b = [(Am(1) - theta_hat(1)); (Am(2) - theta_hat(2)); 0];
+    T(:,k) = (1 + Am(1) + Am(2)) / (theta_hat(n+1,k) + theta_hat(n+2,k));
+    A = [1 theta_hat(n+1,k) 0;
+         theta_hat(1,k) theta_hat(n+2,k) theta_hat(n+1,k);
+         theta_hat(2,k) 0 theta_hat(n+2,k)];
+    b = [(Am(1) - theta_hat(1,k)); (Am(2) - theta_hat(2,k)); 0];
     V = A \ b;
 
     R(2,k) = V(1);
